@@ -1,0 +1,61 @@
+# Render.com configuration for LinkedIn Agent Worker
+
+services:
+  # Main Next.js Web Service
+  - type: web
+    name: agenthub-web
+    env: node
+    plan: starter
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+        sync: false
+      - key: CLERK_SECRET_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+
+  # Background Worker for LinkedIn Automation
+  - type: worker
+    name: agenthub-linkedin-worker
+    env: node
+    plan: starter
+    buildCommand: npm install && npx playwright install chromium
+    startCommand: node dist/worker/linkedin-worker.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: PROXY_LIST
+        value: http://proxy1.example.com:8080,http://proxy2.example.com:8080
+      - key: PROXY_URL
+        value: http://proxy1.example.com:8080
+
+  # Cron Job for Scheduled LinkedIn Campaigns
+  - type: cron
+    name: agenthub-linkedin-cron
+    env: node
+    schedule: "0 */6 * * *"  # Every 6 hours
+    buildCommand: npm install && npx playwright install chromium
+    startCommand: node dist/worker/linkedin-cron-job.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: PROXY_LIST
+        sync: false
